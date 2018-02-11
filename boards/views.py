@@ -3,12 +3,20 @@ from django.http import Http404
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
+from django.views.generic import UpdateView, ListView
+from django.utils import timezone
+from django.utils.decorators import method_decorator
 from .models import Board, Topic, Post
 from .forms import NewTopicForm, PostForm
 
-def home(request):
-    boards = Board.objects.all()
-    return render(request, 'home.html', {'boards' : boards})
+#def home(request):
+#    boards = Board.objects.all()
+#    return render(request, 'home.html', {'boards' : boards})
+# Use class based view from django
+class BoardListView(ListView):
+    model = Board
+    context_object_name = 'boards'
+    template_name = 'home.html'
 
 def board_topics(request, pk):
     try:
@@ -58,3 +66,22 @@ def reply_topic(request, pk, topic_pk):
     else:
         form = PostForm()
     return render(request, 'reply_topic.html', {'topic':topic, 'form':form})
+
+@method_decorator(login_required, name='dispatch')
+class PostUpdateView(UpdateView):
+    model = Post
+    fields = ('message',)
+    template_name = 'edit_post.html'
+    pk_url_kwarg = 'post_pk'
+    context_object_name = 'post'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(created_by=self.request.user)
+
+    def form_valid(self, form):
+        post = form.save(commit=False)
+        post.updated_by = self.request.user
+        post.updated_at = timezone.now()
+        post.save()
+        return redirect('topic_posts', pk=post.topic.board.pk, topic_pk=post.topic.pk)
