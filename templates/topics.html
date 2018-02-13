@@ -10,12 +10,11 @@
 {% endblock %}
 
 {% block content %}
-
   <div class="mb-4">
     <a href="{% url 'new_topic' board.pk %}" class="btn btn-primary">New topic</a>
   </div>
 
-  <table class="table">
+  <table class="table mb-4">
     <thead class="thead-inverse">
       <tr>
         <th>Topic</th>
@@ -28,7 +27,7 @@
     <tbody>
       {% for topic in topics %}
         <tr>
-          <td><a href="{% url 'topic_posts' board.pk topic.pk %}">{{ topic.subject }}</td>
+          <td><a href="{% url 'topic_posts' board.pk topic.pk %}">{{ topic.subject }}</a></td>
           <td>{{ topic.starter.username }}</td>
           <td>{{ topic.replies }}</td>
           <td>{{ topic.views }}</td>
@@ -37,4 +36,6 @@
       {% endfor %}
     </tbody>
   </table>
+
+{% include 'includes/pagination.html' %}
 {% endblock %}
